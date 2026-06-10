@@ -1,0 +1,26 @@
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs and local runtime files
+*.log
+logs/
+*.pid
+
+# Environment and local config
+.env
+.env.*
+application-local.yml
+
+# IDE and OS metadata
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# QA/browser artifacts
+test-results/
+playwright-report/
+blob-report/
+screenshots/
+traces/
