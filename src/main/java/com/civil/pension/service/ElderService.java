@@ -25,7 +25,6 @@ public class ElderService {
         this.elderRepository = elderRepository;
     }
 
-
     @Transactional
     public Elder create(Elder elder) {
         if (elderRepository.existsByIdCard(elder.getIdCard())) {

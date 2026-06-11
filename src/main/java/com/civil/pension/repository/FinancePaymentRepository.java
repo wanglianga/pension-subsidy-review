@@ -17,6 +17,8 @@ public interface FinancePaymentRepository extends JpaRepository<FinancePayment, 
 
     List<FinancePayment> findByPaymentMonthAndStatus(String paymentMonth, PaymentStatus status);
 
+    List<FinancePayment> findByPaymentMonthAndIsReissue(String paymentMonth, Boolean isReissue);
+
     List<FinancePayment> findByBatchNo(String batchNo);
 
     List<FinancePayment> findByStatus(PaymentStatus status);

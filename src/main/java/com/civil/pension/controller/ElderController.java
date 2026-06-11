@@ -26,7 +26,6 @@ public class ElderController {
         this.elderService = elderService;
     }
 
-
     @PostMapping
     public Result<Elder> create(@RequestBody Elder elder) {
         return Result.success(elderService.create(elder));

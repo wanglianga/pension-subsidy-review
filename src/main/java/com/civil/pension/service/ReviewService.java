@@ -28,14 +28,17 @@ public class ReviewService {
     private final FinancePaymentService financePaymentService;
 
     @Autowired
-    public ReviewService(AbnormalAlertService abnormalAlertService, CommunityCheckService communityCheckService, ElderSubsidyService elderSubsidyService, SubsidyAdjustmentService subsidyAdjustmentService, FinancePaymentService financePaymentService) {
+    public ReviewService(AbnormalAlertService abnormalAlertService,
+                         CommunityCheckService communityCheckService,
+                         ElderSubsidyService elderSubsidyService,
+                         SubsidyAdjustmentService subsidyAdjustmentService,
+                         FinancePaymentService financePaymentService) {
         this.abnormalAlertService = abnormalAlertService;
         this.communityCheckService = communityCheckService;
         this.elderSubsidyService = elderSubsidyService;
         this.subsidyAdjustmentService = subsidyAdjustmentService;
         this.financePaymentService = financePaymentService;
     }
-
 
     @Transactional
     public void runMonthlyReview(String reviewMonth) {

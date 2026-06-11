@@ -50,9 +50,10 @@ public class FinancePaymentService {
             paymentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
         }
 
-        List<FinancePayment> existing = financePaymentRepository.findByPaymentMonth(paymentMonth);
-        if (!existing.isEmpty()) {
-            throw new BusinessException(paymentMonth + "月份拨付单已生成");
+        List<FinancePayment> existingNormal = financePaymentRepository
+                .findByPaymentMonthAndIsReissue(paymentMonth, false);
+        if (!existingNormal.isEmpty()) {
+            throw new BusinessException(paymentMonth + "月份正常拨付单已生成");
         }
 
         List<ElderSubsidy> activeSubsidies = elderSubsidyRepository.findByStatus(SubsidyStatus.ACTIVE);

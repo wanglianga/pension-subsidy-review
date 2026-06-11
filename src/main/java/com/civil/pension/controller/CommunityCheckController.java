@@ -26,7 +26,6 @@ public class CommunityCheckController {
         this.communityCheckService = communityCheckService;
     }
 
-
     @PostMapping
     public Result<CommunityCheck> create(@RequestBody CommunityCheck check) {
         return Result.success(communityCheckService.create(check));

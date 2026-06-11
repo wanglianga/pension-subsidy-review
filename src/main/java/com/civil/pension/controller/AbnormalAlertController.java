@@ -27,7 +27,6 @@ public class AbnormalAlertController {
         this.abnormalAlertService = abnormalAlertService;
     }
 
-
     @PostMapping
     public Result<AbnormalAlert> create(@RequestBody AbnormalAlert alert) {
         return Result.success(abnormalAlertService.createAlert(

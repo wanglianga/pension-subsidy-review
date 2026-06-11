@@ -26,7 +26,6 @@ public class FinancePaymentController {
         this.financePaymentService = financePaymentService;
     }
 
-
     @PostMapping("/generate-monthly")
     public Result<List<FinancePayment>> generateMonthlyPayment(
             @RequestParam(required = false) String paymentMonth) {

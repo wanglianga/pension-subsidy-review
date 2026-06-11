@@ -32,12 +32,13 @@ public class SubsidyAdjustmentService {
     private final ElderRepository elderRepository;
 
     @Autowired
-    public SubsidyAdjustmentService(SubsidyAdjustmentRepository subsidyAdjustmentRepository, ElderSubsidyRepository elderSubsidyRepository, ElderRepository elderRepository) {
+    public SubsidyAdjustmentService(SubsidyAdjustmentRepository subsidyAdjustmentRepository,
+                                     ElderSubsidyRepository elderSubsidyRepository,
+                                     ElderRepository elderRepository) {
         this.subsidyAdjustmentRepository = subsidyAdjustmentRepository;
         this.elderSubsidyRepository = elderSubsidyRepository;
         this.elderRepository = elderRepository;
     }
-
 
     @Transactional
     public SubsidyAdjustment createSuspendFromAlert(ElderSubsidy subsidy, AbnormalAlert alert) {

@@ -50,14 +50,17 @@ public class AbnormalAlertService {
         if (Boolean.FALSE.equals(check.isStillAlive())) {
             createAlert(check.getElderId(), check.getId(), AlertType.DECEASED,
                     check.getCheckMonth(), "社区核查确认老人去世", check.getCommunityCode());
-        } else if (Boolean.FALSE.equals(check.isInCommunity())) {
+        }
+        if (Boolean.FALSE.equals(check.isInCommunity())) {
             createAlert(check.getElderId(), check.getId(), AlertType.MOVED_OUT,
                     check.getCheckMonth(), "社区核查确认老人迁出辖区: " + check.getChangeReason(),
                     check.getCommunityCode());
-        } else if (Boolean.FALSE.equals(check.isBankCardValid())) {
+        }
+        if (Boolean.FALSE.equals(check.isBankCardValid())) {
             createAlert(check.getElderId(), check.getId(), AlertType.BANK_CARD_ERROR,
                     check.getCheckMonth(), "银行卡信息异常", check.getCommunityCode());
-        } else if (Boolean.TRUE.equals(check.isStatusChanged())) {
+        }
+        if (Boolean.TRUE.equals(check.isStatusChanged())) {
             createAlert(check.getElderId(), check.getId(), AlertType.STATUS_CHANGE,
                     check.getCheckMonth(), "资格状态变化: " + check.getChangeReason(),
                     check.getCommunityCode());

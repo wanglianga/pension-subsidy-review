@@ -27,7 +27,6 @@ public class SubsidyAdjustmentController {
         this.subsidyAdjustmentService = subsidyAdjustmentService;
     }
 
-
     @PostMapping("/suspend")
     public Result<SubsidyAdjustment> createSuspend(@RequestBody Map<String, Object> params) {
         Long elderId = Long.valueOf(params.get("elderId").toString());

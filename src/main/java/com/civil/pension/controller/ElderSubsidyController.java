@@ -26,7 +26,6 @@ public class ElderSubsidyController {
         this.elderSubsidyService = elderSubsidyService;
     }
 
-
     @PostMapping("/apply")
     public Result<ElderSubsidy> apply(@RequestBody Map<String, Object> params) {
         Long elderId = Long.valueOf(params.get("elderId").toString());

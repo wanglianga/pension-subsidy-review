@@ -19,7 +19,6 @@ public class ReviewController {
         this.reviewService = reviewService;
     }
 
-
     @PostMapping("/monthly")
     public Result<Void> runMonthlyReview(@RequestParam(required = false) String reviewMonth) {
         reviewService.runMonthlyReview(reviewMonth);

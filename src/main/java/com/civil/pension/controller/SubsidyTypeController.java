@@ -24,7 +24,6 @@ public class SubsidyTypeController {
         this.subsidyTypeService = subsidyTypeService;
     }
 
-
     @PostMapping
     public Result<SubsidyType> create(@RequestBody SubsidyType subsidyType) {
         return Result.success(subsidyTypeService.create(subsidyType));
