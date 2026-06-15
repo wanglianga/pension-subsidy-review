@@ -4,6 +4,7 @@ import com.civil.pension.entity.Elder;
 import com.civil.pension.entity.ElderSubsidy;
 import com.civil.pension.entity.FinancePayment;
 import com.civil.pension.entity.SubsidyAdjustment;
+import com.civil.pension.enums.AlertType;
 import com.civil.pension.enums.PaymentStatus;
 import com.civil.pension.enums.SubsidyStatus;
 import com.civil.pension.exception.BusinessException;
@@ -34,13 +35,22 @@ public class FinancePaymentService {
     private final ElderSubsidyRepository elderSubsidyRepository;
     private final ElderRepository elderRepository;
     private final SubsidyAdjustmentRepository subsidyAdjustmentRepository;
+    private final AbnormalAlertService abnormalAlertService;
+    private final ElderSubsidyService elderSubsidyService;
 
     @Autowired
-    public FinancePaymentService(FinancePaymentRepository financePaymentRepository, ElderSubsidyRepository elderSubsidyRepository, ElderRepository elderRepository, SubsidyAdjustmentRepository subsidyAdjustmentRepository) {
+    public FinancePaymentService(FinancePaymentRepository financePaymentRepository,
+                                  ElderSubsidyRepository elderSubsidyRepository,
+                                  ElderRepository elderRepository,
+                                  SubsidyAdjustmentRepository subsidyAdjustmentRepository,
+                                  AbnormalAlertService abnormalAlertService,
+                                  ElderSubsidyService elderSubsidyService) {
         this.financePaymentRepository = financePaymentRepository;
         this.elderSubsidyRepository = elderSubsidyRepository;
         this.elderRepository = elderRepository;
         this.subsidyAdjustmentRepository = subsidyAdjustmentRepository;
+        this.abnormalAlertService = abnormalAlertService;
+        this.elderSubsidyService = elderSubsidyService;
     }
 
 
@@ -142,19 +152,57 @@ public class FinancePaymentService {
                 continue;
             }
 
-            if (!StringUtils.hasText(payment.getBankCard())) {
+            String failureReason = validateBankCard(payment.getBankCard(), payment.getBankName());
+            if (failureReason != null) {
                 payment.setStatus(PaymentStatus.FAILED);
-                payment.setFailureReason("银行卡号为空");
+                payment.setFailureReason(failureReason);
+                financePaymentRepository.save(payment);
+
+                Elder elder = elderRepository.findById(payment.getElderId()).orElse(null);
+                if (elder != null) {
+                    abnormalAlertService.createAlert(
+                            payment.getElderId(),
+                            null,
+                            AlertType.BANK_CARD_ERROR,
+                            payment.getPaymentMonth(),
+                            "财政拨付失败，原因：" + failureReason + "，请社区联系家属更新银行账户信息",
+                            payment.getCommunityCode()
+                    );
+
+                    List<ElderSubsidy> subsidies = elderSubsidyRepository.findByElderIdAndStatus(
+                            payment.getElderId(), SubsidyStatus.ACTIVE);
+                    for (ElderSubsidy subsidy : subsidies) {
+                        subsidy.setStatus(SubsidyStatus.SUSPENDED);
+                        subsidy.setRemark("银行卡异常暂停拨付，原因：" + failureReason);
+                        elderSubsidyRepository.save(subsidy);
+                    }
+                }
             } else {
                 payment.setStatus(PaymentStatus.PAID);
                 payment.setPaymentDate(LocalDate.now());
                 payment.setPaymentTime(LocalDateTime.now());
                 payment.setPaymentChannel("银行代发");
+                financePaymentRepository.save(payment);
             }
-            financePaymentRepository.save(payment);
         }
 
         return financePaymentRepository.findByBatchNo(batchNo);
+    }
+
+    private String validateBankCard(String bankCard, String bankName) {
+        if (!StringUtils.hasText(bankCard)) {
+            return "银行卡号为空";
+        }
+        if (bankCard.length() < 15 || bankCard.length() > 19) {
+            return "银行卡号长度不合法（应为15-19位）";
+        }
+        if (!bankCard.matches("\\d+")) {
+            return "银行卡号包含非数字字符";
+        }
+        if (!StringUtils.hasText(bankName)) {
+            return "开户银行为空";
+        }
+        return null;
     }
 
     @Transactional
@@ -164,11 +212,61 @@ public class FinancePaymentService {
             throw new BusinessException("只有发放失败的记录可以重试");
         }
 
+        Elder elder = elderRepository.findById(payment.getElderId()).orElse(null);
+        if (elder != null) {
+            String validationError = validateBankCard(elder.getBankCard(), elder.getBankName());
+            if (validationError != null) {
+                throw new BusinessException("银行卡信息仍有问题：" + validationError + "，请先更新银行卡信息");
+            }
+            payment.setBankCard(elder.getBankCard());
+            payment.setBankName(elder.getBankName());
+        }
+
         payment.setStatus(PaymentStatus.PAID);
         payment.setPaymentDate(LocalDate.now());
         payment.setPaymentTime(LocalDateTime.now());
         payment.setFailureReason(null);
-        payment.setPaymentChannel("银行代发");
+        payment.setPaymentChannel("银行代发-重新发放");
+
+        return financePaymentRepository.save(payment);
+    }
+
+    @Transactional
+    public FinancePayment updateBankCardAndRetry(Long id, String bankCard, String bankName, String operator) {
+        FinancePayment payment = getById(id);
+        if (payment.getStatus() != PaymentStatus.FAILED) {
+            throw new BusinessException("只有发放失败的记录可以更新银行卡并重发");
+        }
+
+        String validationError = validateBankCard(bankCard, bankName);
+        if (validationError != null) {
+            throw new BusinessException("银行卡信息有误：" + validationError);
+        }
+
+        Elder elder = elderRepository.findById(payment.getElderId()).orElse(null);
+        if (elder != null) {
+            elder.setBankCard(bankCard);
+            elder.setBankName(bankName);
+            elderRepository.save(elder);
+
+            List<ElderSubsidy> subsidies = elderSubsidyRepository.findByElderIdAndStatus(
+                    payment.getElderId(), SubsidyStatus.SUSPENDED);
+            for (ElderSubsidy subsidy : subsidies) {
+                if (subsidy.getRemark() != null && subsidy.getRemark().contains("银行卡异常")) {
+                    elderSubsidyService.reactivate(subsidy.getId(),
+                            "银行卡信息已更新，恢复发放：" + bankCard + "(" + bankName + ")",
+                            operator);
+                }
+            }
+        }
+
+        payment.setBankCard(bankCard);
+        payment.setBankName(bankName);
+        payment.setStatus(PaymentStatus.PAID);
+        payment.setPaymentDate(LocalDate.now());
+        payment.setPaymentTime(LocalDateTime.now());
+        payment.setFailureReason(null);
+        payment.setPaymentChannel("银行代发-更新账户后重新发放");
 
         return financePaymentRepository.save(payment);
     }

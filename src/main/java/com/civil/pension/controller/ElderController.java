@@ -3,6 +3,7 @@ package com.civil.pension.controller;
 import com.civil.pension.common.PageResult;
 import com.civil.pension.common.Result;
 import com.civil.pension.entity.Elder;
+import com.civil.pension.enums.DisabilityLevel;
 import com.civil.pension.enums.ElderStatus;
 import com.civil.pension.service.ElderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/elders")
@@ -78,5 +80,28 @@ public class ElderController {
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate moveOutDate,
             @RequestParam(required = false) String moveToPlace) {
         return Result.success(elderService.markMovedOut(id, moveOutDate, moveToPlace));
+    }
+
+    @PostMapping("/{id}/external-change")
+    public Result<Elder> handleExternalChange(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> params) {
+        String changeType = params.get("changeType") != null ? params.get("changeType").toString() : null;
+        LocalDate changeDate = params.get("changeDate") != null
+                ? LocalDate.parse(params.get("changeDate").toString())
+                : LocalDate.now();
+        String changeReason = params.get("changeReason") != null ? params.get("changeReason").toString() : null;
+        String moveToPlace = params.get("moveToPlace") != null ? params.get("moveToPlace").toString() : null;
+        return Result.success(elderService.handleExternalChange(id, changeType, changeDate, changeReason, moveToPlace));
+    }
+
+    @PostMapping("/{id}/disability-level")
+    public Result<Elder> updateDisabilityLevel(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> params) {
+        DisabilityLevel newLevel = DisabilityLevel.valueOf(params.get("newLevel").toString());
+        String approvedBy = params.get("approvedBy") != null ? params.get("approvedBy").toString() : null;
+        String remark = params.get("remark") != null ? params.get("remark").toString() : null;
+        return Result.success(elderService.updateDisabilityLevel(id, newLevel, approvedBy, remark));
     }
 }

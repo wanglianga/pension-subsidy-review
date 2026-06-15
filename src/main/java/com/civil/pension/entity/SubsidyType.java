@@ -27,6 +27,18 @@ public class SubsidyType {
     @Column(name = "monthly_amount", precision = 10, scale = 2)
     private BigDecimal monthlyAmount;
 
+    @Column(name = "mild_amount", precision = 10, scale = 2)
+    private BigDecimal mildAmount;
+
+    @Column(name = "moderate_amount", precision = 10, scale = 2)
+    private BigDecimal moderateAmount;
+
+    @Column(name = "severe_amount", precision = 10, scale = 2)
+    private BigDecimal severeAmount;
+
+    @Column(name = "total_amount", precision = 10, scale = 2)
+    private BigDecimal totalAmount;
+
     @Column(name = "min_age")
     private Integer minAge;
 
@@ -85,6 +97,38 @@ public class SubsidyType {
 
     public void setMonthlyAmount(BigDecimal monthlyAmount) {
         this.monthlyAmount = monthlyAmount;
+    }
+
+    public BigDecimal getMildAmount() {
+        return mildAmount;
+    }
+
+    public void setMildAmount(BigDecimal mildAmount) {
+        this.mildAmount = mildAmount;
+    }
+
+    public BigDecimal getModerateAmount() {
+        return moderateAmount;
+    }
+
+    public void setModerateAmount(BigDecimal moderateAmount) {
+        this.moderateAmount = moderateAmount;
+    }
+
+    public BigDecimal getSevereAmount() {
+        return severeAmount;
+    }
+
+    public void setSevereAmount(BigDecimal severeAmount) {
+        this.severeAmount = severeAmount;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
     public Integer getMinAge() {

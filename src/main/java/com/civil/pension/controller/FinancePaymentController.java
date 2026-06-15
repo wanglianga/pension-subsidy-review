@@ -47,6 +47,16 @@ public class FinancePaymentController {
         return Result.success(financePaymentService.retryPayment(id));
     }
 
+    @PostMapping("/{id}/update-bank-card")
+    public Result<FinancePayment> updateBankCardAndRetry(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> params) {
+        String bankCard = params.get("bankCard") != null ? params.get("bankCard").toString() : null;
+        String bankName = params.get("bankName") != null ? params.get("bankName").toString() : null;
+        String operator = params.get("operator") != null ? params.get("operator").toString() : null;
+        return Result.success(financePaymentService.updateBankCardAndRetry(id, bankCard, bankName, operator));
+    }
+
     @PostMapping("/{id}/cancel")
     public Result<Void> cancelPayment(@PathVariable Long id, @RequestParam String reason) {
         financePaymentService.cancelPayment(id, reason);

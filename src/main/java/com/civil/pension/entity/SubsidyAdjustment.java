@@ -56,6 +56,18 @@ public class SubsidyAdjustment {
     @Column(name = "amount", precision = 10, scale = 2)
     private BigDecimal amount;
 
+    @Column(name = "from_amount", precision = 10, scale = 2)
+    private BigDecimal fromAmount;
+
+    @Column(name = "to_amount", precision = 10, scale = 2)
+    private BigDecimal toAmount;
+
+    @Column(name = "from_disability_level", length = 20)
+    private String fromDisabilityLevel;
+
+    @Column(name = "to_disability_level", length = 20)
+    private String toDisabilityLevel;
+
     @Column(name = "month_count")
     private Integer monthCount;
 
@@ -199,6 +211,38 @@ public class SubsidyAdjustment {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public BigDecimal getFromAmount() {
+        return fromAmount;
+    }
+
+    public void setFromAmount(BigDecimal fromAmount) {
+        this.fromAmount = fromAmount;
+    }
+
+    public BigDecimal getToAmount() {
+        return toAmount;
+    }
+
+    public void setToAmount(BigDecimal toAmount) {
+        this.toAmount = toAmount;
+    }
+
+    public String getFromDisabilityLevel() {
+        return fromDisabilityLevel;
+    }
+
+    public void setFromDisabilityLevel(String fromDisabilityLevel) {
+        this.fromDisabilityLevel = fromDisabilityLevel;
+    }
+
+    public String getToDisabilityLevel() {
+        return toDisabilityLevel;
+    }
+
+    public void setToDisabilityLevel(String toDisabilityLevel) {
+        this.toDisabilityLevel = toDisabilityLevel;
     }
 
     public Integer getMonthCount() {

@@ -4,11 +4,13 @@ import com.civil.pension.entity.AbnormalAlert;
 import com.civil.pension.entity.Elder;
 import com.civil.pension.entity.ElderSubsidy;
 import com.civil.pension.entity.SubsidyAdjustment;
+import com.civil.pension.entity.SubsidyType;
 import com.civil.pension.enums.SubsidyStatus;
 import com.civil.pension.exception.BusinessException;
 import com.civil.pension.repository.ElderRepository;
 import com.civil.pension.repository.ElderSubsidyRepository;
 import com.civil.pension.repository.SubsidyAdjustmentRepository;
+import com.civil.pension.repository.SubsidyTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,14 +32,17 @@ public class SubsidyAdjustmentService {
     private final SubsidyAdjustmentRepository subsidyAdjustmentRepository;
     private final ElderSubsidyRepository elderSubsidyRepository;
     private final ElderRepository elderRepository;
+    private final SubsidyTypeRepository subsidyTypeRepository;
 
     @Autowired
     public SubsidyAdjustmentService(SubsidyAdjustmentRepository subsidyAdjustmentRepository,
                                      ElderSubsidyRepository elderSubsidyRepository,
-                                     ElderRepository elderRepository) {
+                                     ElderRepository elderRepository,
+                                     SubsidyTypeRepository subsidyTypeRepository) {
         this.subsidyAdjustmentRepository = subsidyAdjustmentRepository;
         this.elderSubsidyRepository = elderSubsidyRepository;
         this.elderRepository = elderRepository;
+        this.subsidyTypeRepository = subsidyTypeRepository;
     }
 
     @Transactional
@@ -224,6 +229,70 @@ public class SubsidyAdjustmentService {
 
     public List<SubsidyAdjustment> getByType(String adjustType) {
         return subsidyAdjustmentRepository.findByAdjustType(adjustType);
+    }
+
+    @Transactional
+    public SubsidyAdjustment createDisabilityLevelChange(Long elderId, Long subsidyTypeId,
+                                                          String fromLevel, String toLevel,
+                                                          BigDecimal fromAmount, BigDecimal toAmount,
+                                                          String reason, String approvedBy) {
+        Elder elder = elderRepository.findById(elderId)
+                .orElseThrow(() -> new BusinessException("老人档案不存在"));
+
+        ElderSubsidy subsidy = elderSubsidyRepository.findByElderIdAndSubsidyTypeId(elderId, subsidyTypeId)
+                .orElseThrow(() -> new BusinessException("老人补贴记录不存在"));
+
+        String nextMonth = LocalDate.now().plusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM"));
+
+        SubsidyAdjustment adjustment = new SubsidyAdjustment();
+        adjustment.setAdjustNo("ADJ" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 4).toUpperCase());
+        adjustment.setElderId(elderId);
+        adjustment.setElderIdCard(elder.getIdCard());
+        adjustment.setElderName(elder.getName());
+        adjustment.setSubsidyTypeId(subsidyTypeId);
+        adjustment.setSubsidyCode(subsidy.getSubsidyCode());
+        adjustment.setAdjustType("AMOUNT_CHANGE");
+        adjustment.setFromStatus(subsidy.getStatus().name());
+        adjustment.setToStatus(subsidy.getStatus().name());
+        adjustment.setAdjustMonth(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM")));
+        adjustment.setStartMonth(nextMonth);
+        adjustment.setFromAmount(fromAmount);
+        adjustment.setToAmount(toAmount);
+        adjustment.setAmount(toAmount);
+        adjustment.setFromDisabilityLevel(fromLevel);
+        adjustment.setToDisabilityLevel(toLevel);
+        adjustment.setReason(reason);
+        adjustment.setStatus(subsidy.getStatus());
+        adjustment.setApprovedBy(approvedBy);
+        adjustment.setApproveTime(LocalDateTime.now());
+        adjustment.setCommunityCode(elder.getCommunityCode());
+
+        SubsidyAdjustment saved = subsidyAdjustmentRepository.save(adjustment);
+
+        subsidy.setMonthlyAmount(toAmount);
+        subsidy.setRemark("失能等级由 " + fromLevel + " 调整为 " + toLevel + "，月金额由 " + fromAmount + " 调整为 " + toAmount + "，从 " + nextMonth + " 起生效");
+        elderSubsidyRepository.save(subsidy);
+
+        return saved;
+    }
+
+    public BigDecimal calculateAmountByDisabilityLevel(SubsidyType subsidyType, String disabilityLevel) {
+        if (subsidyType == null || disabilityLevel == null) {
+            return subsidyType != null ? subsidyType.getMonthlyAmount() : BigDecimal.ZERO;
+        }
+        switch (disabilityLevel) {
+            case "MILD":
+                return subsidyType.getMildAmount() != null ? subsidyType.getMildAmount() : subsidyType.getMonthlyAmount();
+            case "MODERATE":
+                return subsidyType.getModerateAmount() != null ? subsidyType.getModerateAmount() : subsidyType.getMonthlyAmount();
+            case "SEVERE":
+                return subsidyType.getSevereAmount() != null ? subsidyType.getSevereAmount() : subsidyType.getMonthlyAmount();
+            case "TOTAL":
+                return subsidyType.getTotalAmount() != null ? subsidyType.getTotalAmount() : subsidyType.getMonthlyAmount();
+            case "NONE":
+            default:
+                return subsidyType.getMonthlyAmount();
+        }
     }
 
     private int calculateMonthCount(String startMonth, String endMonth) {

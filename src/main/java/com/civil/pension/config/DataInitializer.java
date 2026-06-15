@@ -58,6 +58,10 @@ public class DataInitializer implements CommandLineRunner {
         nursing.setSubsidyName("护理补贴");
         nursing.setDescription("失能老年人享受的护理补贴");
         nursing.setMonthlyAmount(new BigDecimal("300.00"));
+        nursing.setMildAmount(new BigDecimal("200.00"));
+        nursing.setModerateAmount(new BigDecimal("300.00"));
+        nursing.setSevereAmount(new BigDecimal("400.00"));
+        nursing.setTotalAmount(new BigDecimal("500.00"));
         nursing.setMinAge(60);
         nursing.setRequireLowIncome(false);
         nursing.setRequireDisability(true);

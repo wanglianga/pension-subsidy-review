@@ -57,6 +57,20 @@ public class SubsidyAdjustmentController {
         return Result.success(subsidyAdjustmentService.createReissue(elderId, subsidyTypeId, startMonth, endMonth, amount, reason, approvedBy));
     }
 
+    @PostMapping("/disability-level-change")
+    public Result<SubsidyAdjustment> createDisabilityLevelChange(@RequestBody Map<String, Object> params) {
+        Long elderId = Long.valueOf(params.get("elderId").toString());
+        Long subsidyTypeId = Long.valueOf(params.get("subsidyTypeId").toString());
+        String fromLevel = params.get("fromLevel") != null ? params.get("fromLevel").toString() : null;
+        String toLevel = params.get("toLevel") != null ? params.get("toLevel").toString() : null;
+        BigDecimal fromAmount = params.get("fromAmount") != null ? new BigDecimal(params.get("fromAmount").toString()) : null;
+        BigDecimal toAmount = params.get("toAmount") != null ? new BigDecimal(params.get("toAmount").toString()) : null;
+        String reason = params.get("reason") != null ? params.get("reason").toString() : null;
+        String approvedBy = params.get("approvedBy") != null ? params.get("approvedBy").toString() : null;
+        return Result.success(subsidyAdjustmentService.createDisabilityLevelChange(
+                elderId, subsidyTypeId, fromLevel, toLevel, fromAmount, toAmount, reason, approvedBy));
+    }
+
     @GetMapping("/{id}")
     public Result<SubsidyAdjustment> getById(@PathVariable Long id) {
         return Result.success(subsidyAdjustmentService.getById(id));
